@@ -132,7 +132,7 @@ const onDone = () => {
     // set image
     const image = new Image();
     image.src = 'data:image/png;base64,' + sigImageData.value;
-    sigCaptured.value = { image, sig: sigImageData.value };
+    sigCaptured.value = image;
   }
 };
 const SigImageCallback = (str) => {
@@ -183,7 +183,7 @@ listener();
       {{ sigImageData }}
     </textarea>
     <h5>Image:</h5>
-    <img v-if="sigCaptured" :src="sigCaptured?.image" alt="Signature" />
+    <img v-if="sigCaptured" :src="sigCaptured?.src" alt="Signature" />
 
     <input type="hidden" name="bioSigData" v-model="bioSigData" />
     <input type="hidden" name="sigImgData" v-model="sigImageData" />

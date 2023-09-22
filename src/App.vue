@@ -172,8 +172,8 @@ listener();
     <form action="#" @submit.prevent name="FORM1">
       <div class="actions">
         <button @click="onSign" type="button">Sign</button>
-        <button @click="onClear" type="button">Clear</button>
-        <button @click="onDone" type="button">Done</button>
+        <button @click="onSign" type="button">Re-Sign</button>
+        <button @click="onDone" type="button">Save</button>
       </div>
       <h5>SigString:</h5>
       <textarea name="sigStringData" rows="20" cols="50">

@@ -93,7 +93,7 @@ const onSign = () => {
     const ctx = document.getElementById('cnv').getContext('2d');
     SetDisplayXSize(500);
     SetDisplayYSize(100);
-    SetTabletState(0, tmr);
+    SetTabletState(0, tmr.value);
     SetJustifyMode(0);
     ClearTablet();
     if (tmr.value == null) {
@@ -116,7 +116,7 @@ const onDone = () => {
   if (NumberOfTabletPoints() == 0) {
     alert('Please sign before continuing');
   } else {
-    SetTabletState(0, tmr);
+    SetTabletState(0, tmr.value);
     //RETURN TOPAZ-FORMAT SIGSTRING
     SetSigCompressionMode(1);
     bioSigData.value = GetSigString();

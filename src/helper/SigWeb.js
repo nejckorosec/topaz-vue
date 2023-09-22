@@ -1,327 +1,49 @@
 //SigWebTablet JavaScript File for SigWeb
 //
-//Version - 1.0.3.0
+//Version - 1.0.4.0
 //
-//Last updated by Topaz Systems Inc. - 4/20/2020
+//Last updated by Topaz Systems Inc. - 1/5/2021
 //
-var tmr;
-var eventTmr;
 
-var resetIsSupported = false;
-let lcdSize, lcdX, lcdY, scrn, ctx;
+var getBlobURL =
+  (window.URL && URL.createObjectURL.bind(URL)) ||
+  (window.webkitURL && webkitURL.createObjectURL.bind(webkitURL)) ||
+  window.createObjectURL;
+var revokeBlobURL =
+  (window.URL && URL.revokeObjectURL.bind(URL)) ||
+  (window.webkitURL && webkitURL.revokeObjectURL.bind(webkitURL)) ||
+  window.revokeObjectURL;
 
-export function startTablet(setSigCaptured) {
-  try {
-    SetTabletState(1);
-    let retmod = TabletModelNumber();
-    SetTabletState(0);
-    if (retmod == 11 || retmod == 12 || retmod == 15) {
-      ctx = document.getElementById('cnv').getContext('2d');
-      eventTmr = setInterval(SigWebEvent, 20);
-      console.log(eventTmr);
-      tmr = SetTabletState(1, ctx, 50) || tmr;
-      SetLCDCaptureMode(2);
-      document.FORM1.sigString.value = '';
-      LcdRefresh(0, 0, 0, 240, 64);
-      SetJustifyMode(0);
-      KeyPadClearHotSpotList();
-      ClearSigWindow(1);
-      SetDisplayXSize(500);
-      SetDisplayYSize(100);
-      SetImageXSize(500);
-      SetImageYSize(100);
-      SetLCDCaptureMode(2);
+var baseUri = makeUri();
+var ctx;
 
-      /*
-			LCDSendGraphicUrl(1, 2, 0, 20, "http://www.sigplusweb.com/SigWeb/Sign.bmp");
-			LCDSendGraphicUrl(1, 2, 207, 4, "http://www.sigplusweb.com/SigWeb/OK.bmp");
-			LCDSendGraphicUrl(1, 2, 15, 4, "http://www.sigplusweb.com/SigWeb/CLEAR.bmp");
-			*/
-      LcdWriteLocalImage(1, 2, 0, 20, '/images/Sign.bmp');
-      LcdWriteLocalImage(1, 2, 207, 4, '/images/OK.bmp');
-      LcdWriteLocalImage(1, 2, 15, 4, '/images/CLEAR.bmp');
+export function isSigWeb_1_7_0_0_Installed(sigWebVer) {
+  var minSigWebVersionGetDaysUntilCertificateExpiresSupport = '1.7.0.0';
 
-      lcdSize = LCDGetLCDSize();
-      lcdX = lcdSize & 0xffff;
-      lcdY = (lcdSize >> 16) & 0xffff;
-
-      const data =
-        'These are sample terms and conditions. Please press Continue.';
-
-      parse(data);
-
-      LCDWriteString(0, 2, 15, 45, '9pt Arial', 15, 'Continue');
-
-      KeyPadAddHotSpot(0, 1, 12, 40, 40, 15); //Continue
-
-      ClearTablet();
-
-      LCDSetWindow(0, 0, 1, 1);
-      SetSigWindow(1, 0, 0, 1, 1);
-      SetLCDCaptureMode(2);
-
-      scrn = 1;
-
-      onSigPenUp = () => {
-        processPenUp(setSigCaptured);
-      };
-
-      SetLCDCaptureMode(2);
-    } else {
-      alert(
-        'You do not have the appropriate signature pad plugged in to use this demo.'
-      );
-    }
-  } catch (e) {
-    alert(
-      'Unable to communicate with SigWeb. Please confirm that SigWeb is installed and running on this PC.'
-    );
-  }
-}
-
-function processPenUp(setSigCaptured) {
-  if (KeyPadQueryHotSpot(0) > 0) {
-    ClearSigWindow(1);
-    LcdRefresh(1, 16, 45, 50, 15);
-
-    if (scrn == 1) {
-      ClearTablet();
-      LcdRefresh(0, 0, 0, 240, 64);
-
-      const data2 =
-        "We'll bind the signature to all the displayed text. Please press Continue.";
-
-      parse(data2);
-
-      LCDWriteString(0, 2, 15, 45, '9pt Arial', 15, 'Continue');
-      LCDWriteString(0, 2, 200, 45, '9pt Arial', 15, 'Back');
-
-      KeyPadAddHotSpot(1, 1, 195, 40, 20, 15); //Back
-
-      scrn = 2;
-    } else if (scrn == 2) {
-      LcdRefresh(2, 0, 0, 240, 64);
-      ClearTablet();
-      KeyPadClearHotSpotList();
-      KeyPadAddHotSpot(2, 1, 10, 5, 53, 17); //CLEAR
-      KeyPadAddHotSpot(3, 1, 197, 5, 19, 17); //OK
-      LCDSetWindow(2, 22, 236, 40);
-      SetSigWindow(1, 0, 22, 240, 40);
-    }
-
-    SetLCDCaptureMode(2);
-  }
-
-  if (KeyPadQueryHotSpot(1) > 0) {
-    ClearSigWindow(1);
-    LcdRefresh(1, 200, 45, 25, 15);
-
-    if (scrn == 2) {
-      KeyPadClearHotSpotList();
-      LcdRefresh(1, 200, 45, 25, 15);
-      ClearTablet();
-      LcdRefresh(0, 0, 0, 240, 64);
-
-      const data =
-        'These are sample terms and conditions. Please press Continue.';
-
-      parse(data);
-
-      LCDWriteString(0, 2, 15, 45, '9pt Arial', 15, 'Continue');
-
-      KeyPadAddHotSpot(0, 1, 12, 40, 40, 15); //Continue
-
-      scrn = 1;
-    }
-
-    SetLCDCaptureMode(2);
-  }
-
-  if (KeyPadQueryHotSpot(2) > 0) {
-    ClearSigWindow(1);
-    LcdRefresh(1, 10, 0, 53, 17);
-
-    LcdRefresh(2, 0, 0, 240, 64);
-    ClearTablet();
-  }
-
-  if (KeyPadQueryHotSpot(3) > 0) {
-    ClearSigWindow(1);
-    LcdRefresh(1, 210, 3, 14, 14);
-
-    if (NumberOfTabletPoints() > 0) {
-      LcdRefresh(0, 0, 0, 240, 64);
-      LCDWriteString(
-        0,
-        2,
-        35,
-        25,
-        '9pt Arial',
-        15,
-        'Signature capture complete.'
-      );
-
-      //NOW, EXTRACT THE SIGNATURE IN THE TOPAZ BIOMETRIC FORMAT -- SIGSTRING
-      //OR AS A BASE64-ENCODED PNG IMAGE
-      //OR BOTH
-
-      //********************USE THIS SECTION IF YOU WISH TO APPLY AUTOKEY TO YOUR TOPAZ SIGNATURE
-      //READ ABOUT AUTOKEY AND THE TOPAZ SIGNATURE FORMAT HERE: http://topazsystems.com/links/robustsignatures.pdf
-      //AUTOKEY IS CRITICAL TO SAVING AN eSIGN-COMPLIANT SIGNATURE
-      //AUTOKEY ONLY APPLIES TO THE TOPAZ-FORMAT SIGSTRING AND DOES NOT APPLY TO AN IMAGE OF THE SIGNATURE
-      //AUTOKEY ALLOWS THE DEVELOPER TO CRYPTOGRAPHICALLY BIND THE TOPAZ SIGNATURE TO A SET OF DATA
-      //THE PURPOSE OF THIS IS TO SHOW THAT THE SIGNATURE IS BEING APPLIED TO THE DATA YOU PASS IN USING AutoKeyAddData()
-      //IN GENERAL TOPAZ RECOMMENDS REPLICATING A TRADITIONAL 'PAPER AND PEN' APPROACH
-      //IN OTHER WORDS, IF YOU WERE TO PRINT OUT ON PAPER THE TERMS/INFORMATION THE SIGNER IS SUPPOSED TO READ AND AGREE WITH
-      //THE DATA ON THIS PAPER IS WHAT SHOULD IN WHOLE BE PASSED INTO AUTOKEYADDANSIDATA() DIGITALLY
-      //THE TOPAZ SIGSTRING IS THEN BOUND TO THIS DATA, AND CAN ONLY BE SUCCESSFULLY DECRYPTED LATER USING THIS DATA
-      //AUTOKEYADDDATA IS DEPRECATED AND REPLACED BY AUTOKEYADDANSIDATA
-      var CryptoData = '';
-      CryptoData =
-        'This represents sample data the signer reads and is agreeing to when signing.';
-      CryptoData =
-        CryptoData + 'Concatenate all this data into a single variable.';
-      AutoKeyAddANSIData(CryptoData); //PASS THE DATA IN TO BE USED FOR AUTOKEY
-      SetEncryptionMode(2);
-      //*******END AUTOKEY SECTION
-
-      //NOTE THAT THE AUTOKEY SECTION ABOVE IS NOT REQUIRED TO RETURN A TOPAZ SIGSTRING
-      //BUT IT IS STRONGLY RECOMMENDED IF YOU REQUIRE eSIGN COMPLIANCE
-      //RETURN THE TOPAZ-FORMAT SIGSTRING
-      SetSigCompressionMode(1);
-      //alert("KEYSTRING:" + GetKeyString());
-
-      document.FORM1.sigString.value += GetSigString();
-      clearInterval(eventTmr);
-      //setTimeout(endDemo, 2000);
-      //TO RETURN A BASE64-ENCODED PNG IMAGE OF THE SIGNATURE
-      SetImageXSize(500);
-      SetImageYSize(100);
-      SetImagePenWidth(5);
-      GetSigImageB64(setSigCaptured); //PASS IN THE FUNCTION NAME SIGWEB WILL USE TO RETURN THE FINAL IMAGE
-    } else {
-      LcdRefresh(0, 0, 0, 240, 64);
-      //LCDSendGraphicUrl(0, 2, 4, 20, "http://www.sigplusweb.com/SigWeb/please.bmp");
-      LCDWriteString(0, 2, 4, 20, '9pt Arial', 15, 'Please Complete Signature');
-      ClearTablet();
-      LcdRefresh(2, 0, 0, 240, 64);
-      SetLCDCaptureMode(2);
-    }
-  }
-
-  ClearSigWindow(1);
-}
-
-function parse(textData) {
-  var words = textData.split(' ');
-  var writeData = '';
-  var tempData = '';
-  var xSize = 0;
-  var ySize = 0;
-  var i = 0;
-  var yPos = 0;
-
-  for (i = 0; i < words.length; i++) {
-    tempData += words[i];
-
-    xSize = LCDStringWidth('9pt Arial', tempData);
-
-    if (xSize < lcdX) {
-      writeData = tempData;
-      tempData += ' ';
-
-      xSize = LCDStringWidth('9pt Arial', tempData);
-
-      if (xSize < lcdX) {
-        writeData = tempData;
-      }
-    } else {
-      ySize = LCDStringHeight('9pt Arial', tempData);
-
-      LCDWriteString(0, 2, 0, yPos, '9pt Arial', 15, writeData);
-
-      tempData = '';
-      writeData = '';
-      yPos += ySize;
-      i--;
-    }
-  }
-
-  if (writeData != '') {
-    LCDWriteString(0, 2, 0, yPos, '9pt Arial', 15, writeData);
-  }
-}
-
-function endDemo() {
-  LcdRefresh(0, 0, 0, 240, 64);
-  LCDSetWindow(0, 0, 240, 64);
-  SetSigWindow(1, 0, 0, 240, 64);
-  KeyPadClearHotSpotList();
-  SetLCDCaptureMode(1);
-  SetTabletState(0, tmr);
-  ClearTablet();
-}
-
-function close() {
-  if (resetIsSupported) {
-    Reset();
-  } else {
-    endDemo();
-  }
-}
-
-//function processPenUp()
-//{
-//ClearSigWindow(1);
-//}
-
-export const listener = () => {
-  console.log('listen');
-  window.onload = () => {
-    if (IsSigWebInstalled()) {
-      console.log('installed');
-      resetIsSupported = GetResetSupported();
-      if (!resetIsSupported) {
-        var sigweb_link = document.createElement('a');
-        sigweb_link.href = 'https://www.topazsystems.com/software/sigweb.exe';
-        sigweb_link.innerHTML =
-          'https://www.topazsystems.com/software/sigweb.exe';
-
-        var note = document.getElementById('sigWebVrsnNote');
-        note.innerHTML = 'There is a newer version of SigWeb available here: ';
-        note.appendChild(sigweb_link);
-      }
-    } else {
-      alert(
-        'Unable to communicate with SigWeb. Please confirm that SigWeb is installed and running on this PC.'
-      );
-    }
-  };
-
-  window.onbeforeunload = function (evt) {
-    close();
-    clearInterval(tmr);
-    evt.preventDefault(); //For Firefox, needed for browser closure
-  };
-};
-
-function GetResetSupported() {
-  var minSigWebVersionResetSupport = '1.6.4.0';
-
-  if (isOlderSigWebVersionInstalled(minSigWebVersionResetSupport)) {
-    console.log('Old SigWeb version installed.');
+  if (
+    isOlderSigWebVersionInstalled(
+      minSigWebVersionGetDaysUntilCertificateExpiresSupport,
+      sigWebVer
+    )
+  ) {
+    console.log('SigWeb version 1.7.0.0 or higher not installed.');
     return false;
   }
   return true;
 }
 
-function isOlderSigWebVersionInstalled(cmprVer) {
-  var sigWebVer = GetSigWebVersion();
-  if (sigWebVer != '') {
-    return isOlderVersion(cmprVer, sigWebVer);
-  } else {
+export function isSigWeb_1_6_4_0_Installed(sigWebVer) {
+  var minSigWebVersionResetSupport = '1.6.4.0';
+
+  if (isOlderSigWebVersionInstalled(minSigWebVersionResetSupport, sigWebVer)) {
+    console.log('SigWeb version 1.6.4.0 or higher not installed.');
     return false;
   }
+  return true;
+}
+
+function isOlderSigWebVersionInstalled(cmprVer, sigWebVer) {
+  return isOlderVersion(cmprVer, sigWebVer);
 }
 
 function isOlderVersion(oldVer, newVer) {
@@ -336,22 +58,7 @@ function isOlderVersion(oldVer, newVer) {
   return false;
 }
 
-/************************************************************************************************************************************************************************************ */
-var getBlobURL =
-  (window.URL && URL.createObjectURL.bind(URL)) ||
-  (window.webkitURL &&
-    window.webkitURL.createObjectURL.bind(window.webkitURL)) ||
-  window.createObjectURL;
-var revokeBlobURL =
-  (window.URL && URL.revokeObjectURL.bind(URL)) ||
-  (window.webkitURL &&
-    window.webkitURL.revokeObjectURL.bind(window.webkitURL)) ||
-  window.revokeObjectURL;
-
-var baseUri = makeUri();
-//var	ctx;
-
-function IsSigWebInstalled() {
+export function IsSigWebInstalled() {
   var xhr = new XMLHttpRequest();
   try {
     xhr.onreadystatechange = function () {
@@ -399,7 +106,7 @@ function isChrome() {
 }
 
 function makeUri() {
-  var prot = window.location.protocol;
+  var prot = location.protocol;
   if (prot == 'file:') {
     prot = 'http:';
   }
@@ -433,16 +140,16 @@ function SigWebcreateXHR() {
     return new XMLHttpRequest();
   } catch (e) {}
   try {
-    return new window.ActiveXObject('Msxml2.XMLHTTP.6.0');
+    return new ActiveXObject('Msxml2.XMLHTTP.6.0');
   } catch (e) {}
   try {
-    return new window.ActiveXObject('Msxml2.XMLHTTP.3.0');
+    return new ActiveXObject('Msxml2.XMLHTTP.3.0');
   } catch (e) {}
   try {
-    return new window.ActiveXObject('Msxml2.XMLHTTP');
+    return new ActiveXObject('Msxml2.XMLHTTP');
   } catch (e) {}
   try {
-    return new window.ActiveXObject('Microsoft.XMLHTTP');
+    return new ActiveXObject('Microsoft.XMLHTTP');
   } catch (e) {}
 
   alert('XMLHttpRequest not supported');
@@ -553,58 +260,36 @@ function SigWebGetProperty(prop) {
 
 var SigImageB64;
 
-// function GetSigImageB64_custom(callback)
-// {
-// 	var cvs = document.createElement('canvas');
-// 	cvs.width = GetImageXSize();
-// 	cvs.height = GetImageYSize();
+//	function GetSigImageB64(callback)
+//		{
+//		var cvs = document.createElement('canvas');
+//		cvs.width = GetImageXSize();
+//		cvs.height = GetImageYSize();
+//
+//		var xhr2 = new XMLHttpRequest();
+//		xhr2.open("GET", baseUri + "SigImage/1", false);
+//		xhr2.responseType = "blob";
+//		xhr2.send(null);
+//		if (xhr2.readyState == 4 && xhr.status == 200)
+//			{
+//			var cntx = cvs.getContext('2d');
+//			var img = new Image();
+//			img.src = window.URL.createObjectURL(xhr2.response);
+//			img.onload = function ()
+//				{
+//				cntx.drawImage(img, 0, 0);
+//				var b64String = cvs.toDataURL("image/png");
+//				var loc = b64String.search("base64,");
+//				var retstring = b64String.slice(loc + 7, b64String.length);
+//				if (callback)
+//					{
+//					callback(retstring);
+//					}
+//				}
+//			}
+//		}
 
-// 	var xhr2 = new XMLHttpRequest();
-// 	xhr2.open("GET", baseUri + "SigImage/1", false);
-// 	xhr2.responseType = "blob";
-// 	xhr2.send(null);
-// 	if (xhr2.readyState == 4 && xhr.status == 200)
-// 		{
-// 		var cntx = cvs.getContext('2d');
-// 		var img = new Image();
-// 		img.src = window.URL.createObjectURL(xhr2.response);
-// 		img.onload = () =>	{
-// 			cntx.drawImage(img, 0, 0);
-// 			//var b64String = cvs.toDataURL("image/png");
-// 			//var loc = b64String.search("base64,");
-// 			//var retstring = b64String.slice(loc + 7, b64String.length);
-// 			return img
-// 		}
-// 	}
-// }
-
-function GetSigImageB64_custom(callback) {
-  var cvs = document.createElement('canvas');
-  cvs.width = GetImageXSize();
-  cvs.height = GetImageYSize();
-
-  var xhr2 = new XMLHttpRequest();
-  xhr2.open('GET', baseUri + 'SigImage/1' + '?noCache=' + generateUUID(), true);
-  xhr2.responseType = 'blob';
-  xhr2.send(null);
-  xhr2.onload = function () {
-    var cntx = cvs.getContext('2d');
-    var img = new Image();
-    //			img.src = window.URL.createObjectURL(xhr2.response);
-    img.src = getBlobURL(xhr2.response);
-    img.onload = function () {
-      cntx.drawImage(img, 0, 0);
-      //var b64String = cvs.toDataURL("image/png");
-      //var loc = b64String.search("base64,");
-      //var retstring = b64String.slice(loc + 7, b64String.length);
-      if (callback) {
-        callback(img);
-      }
-    };
-  };
-}
-
-function GetSigImageB64(callback) {
+export function GetSigImageB64(callback) {
   var cvs = document.createElement('canvas');
   cvs.width = GetImageXSize();
   cvs.height = GetImageYSize();
@@ -909,7 +594,7 @@ function measureText(pText, pFontSize, pStyle) {
   return lResult;
 }
 
-function GetSigWebVersion() {
+export function GetSigWebVersion() {
   var prop = 'SigWebVersion';
 
   var xhr = SigWebcreateXHR();
@@ -950,17 +635,24 @@ function IsPenDown() {
   return EvStatus & 0x01;
 }
 
+export function GetDaysUntilCertificateExpires() {
+  var Prop = 'DaysUntilCertificateExpires';
+
+  Prop = Prop;
+  return SigWebGetProperty(Prop);
+}
+
 //
 //			SigPlusNETSig.cs
 //
-function ClearTablet() {
+export function ClearTablet() {
   var Prop = 'ClearSignature';
 
   Prop = Prop;
   return SigWebGetProperty(Prop);
 }
 
-function NumberOfTabletPoints() {
+export function NumberOfTabletPoints() {
   var Prop = 'TotalPoints';
 
   Prop = Prop;
@@ -992,7 +684,7 @@ function SetSigString(sigStr, ctx) {
   return '';
 }
 
-function GetSigString() {
+export function GetSigString() {
   var Prop = 'SigString';
 
   Prop = Prop;
@@ -1001,7 +693,7 @@ function GetSigString() {
   return Str.slice(1, Str.length - 1);
 }
 
-function SetSigCompressionMode(v) {
+export function SetSigCompressionMode(v) {
   var Prop = 'CompressionMode/';
 
   Prop = Prop + v;
@@ -1261,7 +953,7 @@ function SetUseAmbientColors(v) {
 //
 //		SigPlusNETDisplay.cs
 //
-function SetDisplayXSize(v) {
+export function SetDisplayXSize(v) {
   var Prop = 'DisplayXSize/';
 
   Prop = Prop + v;
@@ -1275,7 +967,7 @@ function GetDisplayXSize() {
   return SigWebGetProperty(Prop);
 }
 
-function SetDisplayYSize(v) {
+export function SetDisplayYSize(v) {
   var Prop = 'DisplayYSize/';
 
   Prop = Prop + v;
@@ -1430,7 +1122,7 @@ function GetDisplayAnnotateSize() {
 //			return null;
 //			}
 
-function SetImageXSize(v) {
+export function SetImageXSize(v) {
   var Prop = 'ImageXSize/';
 
   Prop = Prop + v;
@@ -1444,7 +1136,7 @@ function GetImageXSize() {
   return SigWebGetProperty(Prop);
 }
 
-function SetImageYSize(v) {
+export function SetImageYSize(v) {
   var Prop = 'ImageYSize/';
 
   Prop = Prop + v;
@@ -1458,7 +1150,7 @@ function GetImageYSize() {
   return SigWebGetProperty(Prop);
 }
 
-function SetImagePenWidth(v) {
+export function SetImagePenWidth(v) {
   var Prop = 'ImagePenWidth/';
 
   Prop = Prop + v;
@@ -1612,7 +1304,7 @@ function GetJustifyY() {
   return SigWebGetProperty(Prop);
 }
 
-function SetJustifyMode(v) {
+export function SetJustifyMode(v) {
   var Prop = 'JustifyMode/';
 
   Prop = Prop + v;
@@ -1821,12 +1513,10 @@ function LCDSendCmdData(CmdStr, ReturnCount, Result, TimeOut) {
   Result = SigWebSetStreamProperty(Prop, CmdStr);
 }
 
-/*
-	function LCDSendGraphicCanvas(dest, mode, x, y, canvas) {
-		var Gstr = createLcdBitmapFromCanvas(canvas, 0, 0, xs, ys)
-		LcdWriteImageStream(dest, mode, x, y, canvas.width, canvas.height, Gstr);
-	}
-*/
+function LCDSendGraphicCanvas(dest, mode, x, y, canvas) {
+  var Gstr = createLcdBitmapFromCanvas(canvas, 0, 0, xs, ys);
+  LcdWriteImageStream(dest, mode, x, y, canvas.width, canvas.height, Gstr);
+}
 
 //		function  LCDSendWindowedGraphicCanvas(  dest, mode,  x,  y, canvas )
 //			 {
@@ -1838,12 +1528,10 @@ function LCDSendCmdData(CmdStr, ReturnCount, Result, TimeOut) {
 //			LcdWriteImageStream( dest, mode, x, y, xs, ys, Gstr );
 //			}
 
-/*
-	function LCDSendWindowedGraphicCanvas(dest, mode, x, y, xs, ys, c, xps, yps) {
-		var Gstr = createLcdBitmapFromCanvas(canvas, xps, yps, xs, ys)
-		LcdWriteImageStream(dest, mode, x, y, xs, ys, Gstr);
-	}
-*/
+function LCDSendWindowedGraphicCanvas(dest, mode, x, y, xs, ys, c, xps, yps) {
+  var Gstr = createLcdBitmapFromCanvas(canvas, xps, yps, xs, ys);
+  LcdWriteImageStream(dest, mode, x, y, xs, ys, Gstr);
+}
 
 function LCDSendGraphicUrl(dest, mode, x, y, url) {
   LcdWriteImage(dest, mode, x, y, url);
@@ -1857,11 +1545,10 @@ function LCDSendGraphicUrl(dest, mode, x, y, url) {
 //			{
 //			LcdWriteImageStream(dest, mode, x, y, xs, ys, url);
 //			}
-/*
-	function LCDSendWindowedGraphicUrl(dest, mode, x, y, xse, yse, url, xps, yps) {
-		LcdWriteImageStream(dest, mode, x, y, xs, ys, url);
-	}
-*/
+
+function LCDSendWindowedGraphicUrl(dest, mode, x, y, xse, yse, url, xps, yps) {
+  LcdWriteImageStream(dest, mode, x, y, xs, ys, url);
+}
 
 //		function  LCDSendGraphic(  Dest,  Mode,  XPos,  YPos,  ImageFileName ) {}
 //		function  LCDSendGraphicURL(  Dest,  Mode,  XPos,  YPos,  URL ) {}
@@ -1896,14 +1583,13 @@ function LCDGetLCDSize() {
   Prop = Prop;
   return SigWebGetProperty(Prop);
 }
-/*
-	function LCDSetCompressionMode(NewMode) {
-		var Prop = "LcdCompressionMode/";
 
-		Prop = Prop + v;
-		SigWebSetPropertySync(Prop);
-	}
-*/
+function LCDSetCompressionMode(NewMode) {
+  var Prop = 'LcdCompressionMode/';
+
+  Prop = Prop + v;
+  SigWebSetPropertySync(Prop);
+}
 
 function LCDGetCompressionMode() {
   var Prop = 'LcdCompressionMode';
@@ -1911,14 +1597,13 @@ function LCDGetCompressionMode() {
   Prop = Prop;
   return SigWebGetProperty(Prop);
 }
-/*
-	function LCDSetZCompressionMode(NewMode) {
-		var Prop = "LcdZCompressionMode/";
 
-		Prop = Prop + v;
-		SigWebSetPropertySync(Prop);
-	}
-*/
+function LCDSetZCompressionMode(NewMode) {
+  var Prop = 'LcdZCompressionMode/';
+
+  Prop = Prop + v;
+  SigWebSetPropertySync(Prop);
+}
 
 function LCDGetZCompressionMode() {
   var Prop = 'LcdZCompressionMode';
@@ -2330,12 +2015,12 @@ function testRawData() {
   CloseTablet();
 }
 
-function Reset() {
+export function Reset() {
   var Prop = 'Reset';
   SigWebSetProperty(Prop);
 }
 
-function SetTabletState(v, ctx, tv) {
+export function SetTabletState(v, ctx, tv) {
   var delay;
 
   if (tv) {

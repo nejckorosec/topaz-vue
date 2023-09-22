@@ -169,31 +169,29 @@ listener();
     <!-- <h3>Signature Capture</h3> -->
     <!-- <canvas name="SigImg" id="SigImg" width="500" height="100"></canvas> -->
     <p>{{ sigWebVersionNote }}</p>
-    <form action="#" name="FORM1">
-      <div class="actions">
-        <button @click="onSign">Sign</button>
-        <button @click="onClear">Clear</button>
-        <button @click="onDone">Done</button>
-      </div>
-      <h5>SigString:</h5>
-      <textarea name="sigStringData" rows="20" cols="50">
-        {{ sigStringData }}
-      </textarea>
-      <h5>Base64 String::</h5>
-      <textarea name="sigImageData" rows="20" cols="50">
-        {{ sigImageData }}
-      </textarea>
-      <h5>Image:</h5>
-      <img v-if="sigCaptured" :src="sigCaptured?.image" alt="Signature" />
+    <div class="actions">
+      <button @click="onSign">Sign</button>
+      <button @click="onClear">Clear</button>
+      <button @click="onDone">Done</button>
+    </div>
+    <h5>SigString:</h5>
+    <textarea name="sigStringData" rows="20" cols="50">
+      {{ sigStringData }}
+    </textarea>
+    <h5>Base64 String::</h5>
+    <textarea name="sigImageData" rows="20" cols="50">
+      {{ sigImageData }}
+    </textarea>
+    <h5>Image:</h5>
+    <img v-if="sigCaptured" :src="sigCaptured?.image" alt="Signature" />
 
-      <input type="hidden" name="bioSigData" v-model="bioSigData" />
-      <input type="hidden" name="sigImgData" v-model="sigImageData" />
+    <input type="hidden" name="bioSigData" v-model="bioSigData" />
+    <input type="hidden" name="sigImgData" v-model="sigImageData" />
 
-      <p v-if="daysUntilExp">{{ daysUntilExp }}</p>
-      <p id="SigWebVersion"></p>
-      <p id="SigWebTabletJSVersion"></p>
-      <p id="CertificateExpirationDate"></p>
-    </form>
+    <p v-if="daysUntilExp">{{ daysUntilExp }}</p>
+    <p id="SigWebVersion"></p>
+    <p id="SigWebTabletJSVersion"></p>
+    <p id="CertificateExpirationDate"></p>
   </main>
 </template>
 
